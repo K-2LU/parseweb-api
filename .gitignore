@@ -19,6 +19,9 @@ lib/
 lib64/
 MANIFEST
 
+# package lockfiles
+poetry.lock
+
 # Virtual environments
 .venv/
 venv/
