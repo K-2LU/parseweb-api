@@ -3,7 +3,7 @@ from fastapi import APIRouter, Request
 from modules.scraper import controller
 from modules.scraper.validator import IngestRequest
 
-scraper_router = APIRouter(prefix='/api/v1', tags=['parseweb'])
+scraper_router = APIRouter(prefix='/parse/v1', tags=['parseweb'])
 
 @scraper_router.get('/')
 async def root():
