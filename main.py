@@ -6,7 +6,7 @@ from fastapi import FastAPI
 import os
 
 # local modules here
-from modules.scraper.router import router
+from modules.scraper.router import scraper_router
 from utils.config import settings
 
 @asynccontextmanager
@@ -18,4 +18,4 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(lifespan=lifespan)
-app.include_router(router)
+app.include_router(scraper_router)
