@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import (BaseSettings, SettingsConfigDict)
 
 from .constants import (
     DEFAULT_GEMINI_MODEL,
