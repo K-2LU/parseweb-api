@@ -18,3 +18,20 @@ def scrape_and_save(urls: list[str], filepath: str) -> dict:
             errors[url] = str(e)
 
     return {"processed": processed, "errors": errors}
+
+def load_text(path: str) -> str:
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read().strip()
+
+def chunk_text(
+    text: str,
+    chunk_size: int = DEFAULT_CHUNK_SIZE,
+    overlap: int = DEFAULT_CHUNK_OVERLAP,
+) -> list[str]:
+    chunks = []
+    start = 0
+    while start < len(text):
+        end = start + chunk_size
+        chunks.append(text[start:end])
+        start += chunk_size - overlap
+    return chunks
