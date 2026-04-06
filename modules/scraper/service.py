@@ -1,10 +1,12 @@
 from sentence_transformers import SentenceTransformer
 
+import re
 import httpx
 import aiofiles
+import numpy as np
 from bs4 import BeautifulSoup
 
-from utils.constants import DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP
+from utils.constants import DEFAULT_SEMANTIC_THRESHOLD
 
 async def scrape_and_save(urls: list[str], filepath: str) -> dict:
     """Scrape each URL and overwrite filepath with combined content."""
@@ -35,17 +37,36 @@ async def load_text(path: str) -> str:
         text = await f.read()
         return text.strip()
 
+def _split_sentences(text: str) -> list[str]:
+    return [s.strip() for s in re.split(r'(?<=[.!?])\s+', text) if s.strip()]
+
 async def chunk_text(
     text: str,
-    chunk_size: int = DEFAULT_CHUNK_SIZE,
-    overlap: int = DEFAULT_CHUNK_OVERLAP,
+    embedding_model: SentenceTransformer,
+    breakpoint_threshold: float = DEFAULT_SEMANTIC_THRESHOLD,
 ) -> list[str]:
+    sentences = _split_sentences(text)
+    if not sentences:
+        return []
+
+    embeddings = embedding_model.encode(sentences, show_progress_bar=False)
+    norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
+    normalized = embeddings / np.where(norms == 0, 1, norms)
+
     chunks = []
-    start = 0
-    while start < len(text):
-        end = start + chunk_size
-        chunks.append(text[start:end])
-        start += chunk_size - overlap
+    current: list[str] = [sentences[0]]
+
+    for i in range(1, len(sentences)):
+        similarity = float(np.dot(normalized[i - 1], normalized[i]))
+        if similarity < breakpoint_threshold:
+            chunks.append(" ".join(current))
+            current = [sentences[i]]
+        else:
+            current.append(sentences[i])
+
+    if current:
+        chunks.append(" ".join(current))
+
     return chunks
 
 async def embed_and_store(chunks: list[str], collection, embedding_model: SentenceTransformer) -> int:

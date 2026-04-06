@@ -20,7 +20,7 @@ async def ingest_url(body: IngestRequest, request: Request) -> IngestResponse:
         raise HTTPException(status_code=422, detail={"errors": result["errors"]})
 
     text = await load_text(data_file)
-    chunks = await chunk_text(text)
+    chunks = await chunk_text(text, request.app.state.embedding_model)
     stored = await embed_and_store(chunks, request.app.state.collection, request.app.state.embedding_model)
 
     return IngestResponse(
